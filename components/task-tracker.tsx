@@ -328,13 +328,12 @@ export function TaskTrackerComponent() {
         const date = new Date(today.getFullYear(), month, day);
         const dateString = date.toISOString().split("T")[0];
         const completedCount = completedTasks[dateString] || 0;
-        let color = "bg-gray-800"; // Default color for future dates
+        let color = "bg-gray-800";
 
-        if (date <= today && date >= oneYearAgo) {
+        if(completedCount > 0) {
           color = getActivityColor(completedCount);
-        } else if (date < oneYearAgo) {
-          color = "bg-gray-900"; // Dates more than a year ago
         }
+        
 
         monthCells.push(
           <TooltipProvider key={dateString}>
@@ -497,6 +496,7 @@ export function TaskTrackerComponent() {
                 placeholder="What did you do?"
                 value={journalEntry}
                 onChange={(e) => setJournalEntry(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") saveJournalEntry(); }}
                 className="w-full bg-gray-700 text-white placeholder-gray-400"
               />
               <Button variant="secondary" onClick={saveJournalEntry}>
