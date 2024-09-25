@@ -1,6 +1,6 @@
 // components/navbar.tsx
 import { Button } from "@/components/ui/button";
-import { Settings, LogOut, HelpCircle } from "lucide-react";
+import { Settings, LogOut, HelpCircle, BookOpen } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -29,17 +29,17 @@ export function Navbar({
   setShowSettings,
   setShowWiki,
   showWiki,
-  email 
+  email,
 }: NavbarProps) {
   return (
     <nav className="bg-gray-800 p-4 flex justify-between items-center z-10">
       <div
-        className="text-2xl font-bold text-indigo-600 cursor-pointer font-body"
+        className="text-2xl font-bold text-white drop-shadow-sm cursor-pointer font-body"
         onClick={() => {
           if (showWiki) {
-        setShowWiki(false);
+            setShowWiki(false);
           } else {
-        window.location.href = "/";
+            window.location.href = "/";
           }
         }}
       >
@@ -51,7 +51,7 @@ export function Navbar({
           size="icon"
           onClick={() => setShowWiki(!showWiki)}
         >
-          Wiki
+          <BookOpen className="h-6 w-6" />
         </Button>
         <Button
           variant="ghost"
@@ -60,28 +60,7 @@ export function Navbar({
         >
           <Settings className="h-6 w-6" />
         </Button>
-        {/* <Popover open={showUserPopover} onOpenChange={setShowUserPopover}>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <User className="h-6 w-6" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 bg-gray-800 border-gray-700">
-            <div className="space-y-4">
-              <p className="text-lg font-semibold text-white">
-                Welcome, {username}!
-              </p>
-              <Button
-                variant="destructive"
-                onClick={handleLogout}
-                className="w-full"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover> */}
+       
 
         <Popover open={showUserPopover} onOpenChange={setShowUserPopover}>
           <PopoverTrigger asChild>
@@ -100,14 +79,14 @@ export function Navbar({
             <div className="flex items-center gap-4 p-4 border-b border-gray-700">
               <Avatar className="h-16 w-16">
                 <AvatarImage
-                   src={`https://avatar.iran.liara.run/username?username=${username}`}
+                  src={`https://avatar.iran.liara.run/username?username=${username}`}
                   alt={username}
                 />
                 <AvatarFallback>{username.charAt(0)}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="text-lg font-semibold text-white">{username}</p>
-                <p className="text-sm text-gray-400">{email}m</p>
+                <p className="text-sm text-gray-400">{email}</p>
               </div>
             </div>
             <div className="p-4 space-y-2">

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Book, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Tooltip,
@@ -27,6 +26,8 @@ import { auth, db } from "@/lib/firebaseConfig";
 import { Navbar } from "./navbar";
 import { NoZeroDayWikiComponent } from "./no-zero-day-wiki";
 import Footer from "./footer";
+import { PlaceholdersAndVanishInput } from "./ui/placeholders-and-vanish-input";
+
 interface Task {
   id: number;
   text: string;
@@ -205,7 +206,11 @@ export function TaskTrackerComponent() {
         ...prevTasks,
       ]);
       setNewTask("");
-      setShowSettings(false);
+      //create 0.5 second delay
+      setTimeout(() => {
+        setShowSettings(false);
+      }, 250);
+      //setShowSettings(false);
     }
   };
 
@@ -252,7 +257,11 @@ export function TaskTrackerComponent() {
         [today]: [...(prev[today] || []), newEntry],
       }));
       setJournalEntry("");
-      setShowJournal(false);
+
+      //500ms delay
+      setTimeout(() => {
+        setShowJournal(false);
+      }, 250);
     }
   };
 
@@ -299,6 +308,14 @@ export function TaskTrackerComponent() {
     if (completedCount === 5) return "bg-green-600";
     return "bg-green-700"; // 6 or more completed tasks
   };
+
+  const placeholders = [
+    "What's the first rule of Fight Club?",
+    "Who is Tyler Durden?",
+    "Where is Andrew Laeddis Hiding?",
+    "Write a Javascript method to reverse a string",
+    "How to assemble your own PC?",
+  ];
 
   const generateCalendar = useMemo(() => {
     const today = new Date();
@@ -361,7 +378,7 @@ export function TaskTrackerComponent() {
   }, [completedTasks]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col ">
       {/* Navbar */}
       <Navbar
         username={username}
@@ -375,13 +392,15 @@ export function TaskTrackerComponent() {
         email={email}
       />
 
-      {/* Main content */}
+    
+
 
       {showWiki && <NoZeroDayWikiComponent />}
 
       {!showWiki && (
         <main className="flex-grow p-4 max-w-3xl mx-auto w-full flex flex-col justify-between">
           <div>
+          
             {/* Streak */}
             <div className="mb-4 text-center">
               <span className="text-2xl font-bold">{streak}</span> day streak
@@ -389,28 +408,19 @@ export function TaskTrackerComponent() {
 
             {/* Settings */}
             {showSettings && (
-              <div className="mb-4 flex space-x-2 transition-all duration-300 ease-in-out">
-                <Input
-                  type="text"
-                  placeholder="Add a target"
-                  value={newTask}
+              <div className="mb-4 flex space-x-2 transition-all duration-300 ease-in-out dark">
+                <PlaceholdersAndVanishInput
+                  placeholders={placeholders}
                   onChange={(e) => setNewTask(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      addTask();
-                    }
-                  }}
-                  className="flex-grow bg-gray-700 text-white placeholder-gray-400"
+                  onSubmit={addTask}
                 />
-                <Button variant="secondary" onClick={addTask}>
-                  <Plus />
-                </Button>
               </div>
             )}
 
             {/* Task List or No Tasks Message */}
             {tasks.length > 0 ? (
               <ul className="space-y-2">
+                
                 {tasks.map((task) => (
                   <li
                     key={task.id}
@@ -448,6 +458,7 @@ export function TaskTrackerComponent() {
                     <span className="text-white">⚙️</span> icon
                   </p>
                 </CardContent>
+                
               </Card>
             )}
 
@@ -464,20 +475,16 @@ export function TaskTrackerComponent() {
             </div>
 
             {showJournal && (
-              <div className="mt-4 space-y-2 transition-all duration-300 ease-in-out">
-                <Input
-                  type="text"
-                  placeholder="What did you do?"
-                  value={journalEntry}
+              <div className="mt-4 space-y-2 transition-all duration-300 ease-in-out dark">
+                
+
+                <PlaceholdersAndVanishInput
+                  placeholders={placeholders}
                   onChange={(e) => setJournalEntry(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") saveJournalEntry();
-                  }}
-                  className="w-full bg-gray-700 text-white placeholder-gray-400"
+                  onSubmit={saveJournalEntry}
                 />
-                <Button variant="secondary" onClick={saveJournalEntry}>
-                  Save Entry
-                </Button>
+
+               
               </div>
             )}
           </div>
@@ -489,8 +496,11 @@ export function TaskTrackerComponent() {
               {generateCalendar}
             </div>
           </div>
+          
         </main>
       )}
+
+
 
       {/* Footer */}
       <Footer />
@@ -527,6 +537,8 @@ export function TaskTrackerComponent() {
           </ScrollArea>
         </DialogContent>
       </Dialog>
+
+      
     </div>
   );
 }
