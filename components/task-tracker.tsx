@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Book, Plus, Trash2 } from "lucide-react";
+import { Book, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -463,7 +463,7 @@ export function TaskTrackerComponent() {
             )}
 
             {/* Journal */}
-            <div className="mt-8 flex items-center justify-between">
+            <div className="mt-8 flex items-center justify-center">
               <Button
                 variant="outline"
                 onClick={() => setShowJournal(!showJournal)}

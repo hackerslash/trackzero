@@ -1,6 +1,6 @@
 // components/navbar.tsx
 import { Button } from "@/components/ui/button";
-import { Settings, LogOut, HelpCircle, BookOpen } from "lucide-react";
+import { Settings, LogOut, HelpCircle, BookOpen,FilePlus2 } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -58,7 +58,7 @@ export function Navbar({
           size="icon"
           onClick={() => setShowSettings(!showSettings)}
         >
-          <Settings className="h-6 w-6" />
+          <FilePlus2 className="h-6 w-6" />
         </Button>
        
 
