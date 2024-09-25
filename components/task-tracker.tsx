@@ -25,7 +25,8 @@ import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/lib/firebaseConfig";
 import { Navbar } from "./navbar";
-
+import { NoZeroDayWikiComponent } from "./no-zero-day-wiki";
+import Footer from "./footer";
 interface Task {
   id: number;
   text: string;
@@ -54,6 +55,8 @@ export function TaskTrackerComponent() {
   const [username, setUsername] = useState("");
   const [showUserPopover, setShowUserPopover] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [showWiki, setShowWiki] = useState(false);
+  const [email, setEmail] = useState("");
   const router = useRouter();
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -129,8 +132,10 @@ export function TaskTrackerComponent() {
     const storedCompletedTasks = localStorage.getItem("completedTasks");
     const storedJournalEntries = localStorage.getItem("journalEntries");
     const storedUsername = localStorage.getItem("username");
+    const storedEmail = localStorage.getItem("email");
 
     setUsername(storedUsername || "");
+    setEmail(storedEmail || "");
 
     return {
       tasks: storedTasks ? JSON.parse(storedTasks) : [],
@@ -150,6 +155,7 @@ export function TaskTrackerComponent() {
     localStorage.removeItem("journalEntries");
     localStorage.removeItem("username");
     localStorage.removeItem("lastAccessDate");
+    localStorage.removeItem("email");
 
     setTasks([]);
     setCompletedTasks({});
@@ -296,11 +302,6 @@ export function TaskTrackerComponent() {
 
   const generateCalendar = useMemo(() => {
     const today = new Date();
-    const oneYearAgo = new Date(
-      today.getFullYear() - 1,
-      today.getMonth(),
-      today.getDate()
-    );
     const calendar = [];
     const months = [
       "Jan",
@@ -369,124 +370,130 @@ export function TaskTrackerComponent() {
         handleLogout={handleLogout}
         showSettings={showSettings}
         setShowSettings={setShowSettings}
+        setShowWiki={setShowWiki}
+        showWiki={showWiki}
+        email={email}
       />
 
       {/* Main content */}
-      <main className="flex-grow p-4 max-w-3xl mx-auto w-full flex flex-col justify-between">
-        <div>
-          {/* Streak */}
-          <div className="mb-4 text-center">
-            <span className="text-2xl font-bold">{streak}</span> day streak
-          </div>
 
-          {/* Settings */}
-          {showSettings && (
-            <div className="mb-4 flex space-x-2 transition-all duration-300 ease-in-out">
-              <Input
-                type="text"
-                placeholder="Add a target"
-                value={newTask}
-                onChange={(e) => setNewTask(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    addTask();
-                  }
-                }}
-                className="flex-grow bg-gray-700 text-white placeholder-gray-400"
-              />
-              <Button variant="secondary" onClick={addTask}>
-                <Plus />
+      {showWiki && <NoZeroDayWikiComponent />}
+
+      {!showWiki && (
+        <main className="flex-grow p-4 max-w-3xl mx-auto w-full flex flex-col justify-between">
+          <div>
+            {/* Streak */}
+            <div className="mb-4 text-center">
+              <span className="text-2xl font-bold">{streak}</span> day streak
+            </div>
+
+            {/* Settings */}
+            {showSettings && (
+              <div className="mb-4 flex space-x-2 transition-all duration-300 ease-in-out">
+                <Input
+                  type="text"
+                  placeholder="Add a target"
+                  value={newTask}
+                  onChange={(e) => setNewTask(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      addTask();
+                    }
+                  }}
+                  className="flex-grow bg-gray-700 text-white placeholder-gray-400"
+                />
+                <Button variant="secondary" onClick={addTask}>
+                  <Plus />
+                </Button>
+              </div>
+            )}
+
+            {/* Task List or No Tasks Message */}
+            {tasks.length > 0 ? (
+              <ul className="space-y-2">
+                {tasks.map((task) => (
+                  <li
+                    key={task.id}
+                    className="flex items-center space-x-2 p-2 bg-gray-800 rounded transition-all duration-300 ease-in-out hover:bg-gray-700 group"
+                  >
+                    <Checkbox
+                      id={`task-${task.id}`}
+                      checked={task.completed}
+                      onCheckedChange={() => toggleTask(task.id)}
+                    />
+                    <label
+                      htmlFor={`task-${task.id}`}
+                      className={`flex-grow cursor-pointer ${
+                        task.completed ? "line-through text-gray-500" : ""
+                      }`}
+                    >
+                      {task.text}
+                    </label>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 "
+                      onClick={() => deleteTask(task.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <Card className="bg-gray-800 border-gray-700">
+                <CardContent className="p-6 text-center">
+                  <p className="text-gray-400">
+                    Add specific targets using the{" "}
+                    <span className="text-white">⚙️</span> icon
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Journal */}
+            <div className="mt-8 flex items-center justify-between">
+              <Button
+                variant="outline"
+                onClick={() => setShowJournal(!showJournal)}
+                className="bg-gray-700 text-white hover:bg-green-300"
+              >
+                <Book className="h-6 w-6 mr-2" />
+                Journal
               </Button>
             </div>
-          )}
 
-          {/* Task List or No Tasks Message */}
-          {tasks.length > 0 ? (
-            <ul className="space-y-2">
-              {tasks.map((task) => (
-                <li
-                  key={task.id}
-                  className="flex items-center space-x-2 p-2 bg-gray-800 rounded transition-all duration-300 ease-in-out hover:bg-gray-700 group"
-                >
-                  <Checkbox
-                    id={`task-${task.id}`}
-                    checked={task.completed}
-                    onCheckedChange={() => toggleTask(task.id)}
-                  />
-                  <label
-                    htmlFor={`task-${task.id}`}
-                    className={`flex-grow cursor-pointer ${
-                      task.completed ? "line-through text-gray-500" : ""
-                    }`}
-                  >
-                    {task.text}
-                  </label>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 "
-                    onClick={() => deleteTask(task.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <Card className="bg-gray-800 border-gray-700">
-              <CardContent className="p-6 text-center">
-                <p className="text-gray-400">
-                  Add specific targets using the{" "}
-                  <span className="text-white">⚙️</span> icon
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Journal */}
-          <div className="mt-8 flex items-center justify-between">
-            <Button
-              variant="outline"
-              onClick={() => setShowJournal(!showJournal)}
-              className="bg-gray-700 text-white hover:bg-green-300"
-            >
-              <Book className="h-6 w-6 mr-2" />
-              Journal
-            </Button>
+            {showJournal && (
+              <div className="mt-4 space-y-2 transition-all duration-300 ease-in-out">
+                <Input
+                  type="text"
+                  placeholder="What did you do?"
+                  value={journalEntry}
+                  onChange={(e) => setJournalEntry(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveJournalEntry();
+                  }}
+                  className="w-full bg-gray-700 text-white placeholder-gray-400"
+                />
+                <Button variant="secondary" onClick={saveJournalEntry}>
+                  Save Entry
+                </Button>
+              </div>
+            )}
           </div>
 
-          {showJournal && (
-            <div className="mt-4 space-y-2 transition-all duration-300 ease-in-out">
-              <Input
-                type="text"
-                placeholder="What did you do?"
-                value={journalEntry}
-                onChange={(e) => setJournalEntry(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") saveJournalEntry();
-                }}
-                className="w-full bg-gray-700 text-white placeholder-gray-400"
-              />
-              <Button variant="secondary" onClick={saveJournalEntry}>
-                Save Entry
-              </Button>
+          {/* Calendar */}
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold mb-2">Activity Calendar</h2>
+            <div className="flex flex-wrap justify-between gap-2 overflow-x-auto">
+              {generateCalendar}
             </div>
-          )}
-        </div>
-
-        {/* Calendar */}
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-2">Activity Calendar</h2>
-          <div className="flex flex-wrap justify-between gap-2 overflow-x-auto">
-            {generateCalendar}
           </div>
-        </div>
-      </main>
+        </main>
+      )}
 
       {/* Footer */}
-      <footer className="bg-gray-800 p-4 text-center mt-auto">
-        <p>&copy; 2023 Task Tracker. All rights reserved.</p>
-      </footer>
+      <Footer />
 
       {/* Journal Entries Popup */}
       <Dialog open={!!selectedDate} onOpenChange={() => setSelectedDate(null)}>
