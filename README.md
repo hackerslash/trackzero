@@ -27,7 +27,7 @@
 
 ## Demo
 
-[Live Demo](https://trackzero.hackerslash.me/) (Replace with actual link)
+[Live Demo](https://trackzero.hackerslash.me/) 
 
 ## Screenshots
 
