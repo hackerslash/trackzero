@@ -64,4 +64,8 @@
     @apply bg-background text-foreground;
   }
 }
+@keyframes loadingFade {
+  0%, 80%, 100% { opacity: 0.1; }
+  40% { opacity: 1; }
+}
 

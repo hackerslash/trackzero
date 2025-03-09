@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import { Book, Trash2 } from "lucide-react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { Book, Trash2 } from "lucide-react"; // Removed unused icons
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -18,7 +18,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
 import { useRouter } from "next/navigation";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
@@ -186,14 +185,63 @@ export function TaskTrackerComponent() {
     }
   };
 
+  // Add this new function to reset tasks at midnight
+  const resetTasksAtMidnight = useCallback(() => {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    
+    const timeUntilMidnight = tomorrow.getTime() - now.getTime();
+
+    setTimeout(() => {
+      setTasks(prevTasks => prevTasks.map(task => ({
+        ...task,
+        completed: false
+      })));
+      
+      // Schedule the next reset
+      resetTasksAtMidnight();
+    }, timeUntilMidnight);
+  }, []);
+
+  // Add this useEffect to initialize the midnight reset
+  useEffect(() => {
+    // Check if tasks need to be reset on component mount
+    const lastResetDate = localStorage.getItem('lastResetDate');
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (lastResetDate !== today) {
+      setTasks(prevTasks => prevTasks.map(task => ({
+        ...task,
+        completed: false
+      })));
+      localStorage.setItem('lastResetDate', today);
+    }
+
+    // Set up the next midnight reset
+    resetTasksAtMidnight();
+
+    // Cleanup timeout on unmount
+    return () => {
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+      const timeUntilMidnight = tomorrow.getTime() - now.getTime();
+      clearTimeout(timeUntilMidnight);
+    };
+  }, [resetTasksAtMidnight]);
+
   useEffect(() => {
     // Only save to Firestore if data is fully loaded
     if (isLoaded && userId) {
-      const today = new Date().toISOString().split("T")[0];
-      localStorage.setItem("tasks", JSON.stringify(tasks));
-      localStorage.setItem("completedTasks", JSON.stringify(completedTasks));
-      localStorage.setItem("journalEntries", JSON.stringify(journalEntries));
-      localStorage.setItem("lastAccessDate", today);
+      const today = new Date().toISOString().split('T')[0];
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+      localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+      localStorage.setItem('journalEntries', JSON.stringify(journalEntries));
+      localStorage.setItem('lastAccessDate', today);
+      localStorage.setItem('lastResetDate', today); // Add this line
       calculateStreak(completedTasks);
       saveToFirestore(); // Only save after data is loaded
     }
@@ -284,16 +332,16 @@ export function TaskTrackerComponent() {
   const handleLogout = async () => {
     try {
       if (userId) {
-        const userDocRef = doc(db, "users", userId); // Reference to the user's document
+        const userDocRef = doc(db, "users", userId);
         await updateDoc(userDocRef, {
-          lastAccess: new Date().toISOString().split("T")[0], // Update the lastAccess field with server timestamp
+          lastAccess: new Date().toISOString().split("T")[0],
         });
       }
       await auth.signOut();
       clearLocalData();
       setShowUserPopover(false);
-      setUserId(null); // Clear the userId state
-      router.push(`/signin`); // Navigate to sign-in page after logout
+      setUserId(null);
+      router.push(`/`); // Changed from /signin to /
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -309,12 +357,22 @@ export function TaskTrackerComponent() {
     return "bg-green-700"; // 6 or more completed tasks
   };
 
-  const placeholders = [
-    "What's the first rule of Fight Club?",
-    "Who is Tyler Durden?",
-    "Where is Andrew Laeddis Hiding?",
-    "Write a Javascript method to reverse a string",
-    "How to assemble your own PC?",
+  // Task-specific placeholders
+  const taskPlaceholders = [
+    "Add a new task like 'Read for 30 minutes'",
+    "Try 'Exercise for 20 minutes'",
+    "Maybe 'Meditate for 10 minutes'",
+    "How about 'Study a new topic'",
+    "Or 'Work on a personal project'"
+  ];
+
+  // Journal-specific placeholders
+  const journalPlaceholders = [
+    "What did you accomplish today?",
+    "What are you grateful for?",
+    "What challenges did you face?",
+    "What did you learn today?",
+    "How could tomorrow be better?"
   ];
 
   const generateCalendar = useMemo(() => {
@@ -392,7 +450,6 @@ export function TaskTrackerComponent() {
         email={email}
       />
 
-    
 
 
       {showWiki && <NoZeroDayWikiComponent />}
@@ -406,11 +463,11 @@ export function TaskTrackerComponent() {
               <span className="text-2xl font-bold">{streak}</span> day streak
             </div>
 
-            {/* Settings */}
+            {/* Settings/Add Task */}
             {showSettings && (
               <div className="mb-4 flex space-x-2 transition-all duration-300 ease-in-out dark">
                 <PlaceholdersAndVanishInput
-                  placeholders={placeholders}
+                  placeholders={taskPlaceholders}
                   onChange={(e) => setNewTask(e.target.value)}
                   onSubmit={addTask}
                 />
@@ -474,17 +531,14 @@ export function TaskTrackerComponent() {
               </Button>
             </div>
 
+            {/* Journal Entry */}
             {showJournal && (
               <div className="mt-4 space-y-2 transition-all duration-300 ease-in-out dark">
-                
-
                 <PlaceholdersAndVanishInput
-                  placeholders={placeholders}
+                  placeholders={journalPlaceholders}
                   onChange={(e) => setJournalEntry(e.target.value)}
                   onSubmit={saveJournalEntry}
                 />
-
-               
               </div>
             )}
           </div>
